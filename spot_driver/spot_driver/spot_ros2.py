@@ -2594,15 +2594,15 @@ class SpotROS(Node):
             return response
 
         # run navigate_to
-        resp = self.spot_wrapper.spot_graph_nav.navigate_to(
-            upload_path=goal_handle.request.upload_path,
-            navigate_to=goal_handle.request.navigate_to,
-            initial_localization_fiducial=goal_handle.request.initial_localization_fiducial,
-            initial_localization_waypoint=goal_handle.request.initial_localization_waypoint,
-        )
-        self.run_navigate_to = False
-        feedback_thread.join()
-
+        if (self.spot_wrapper.spot_graph_nav.navigate_initial_localization(upload_path=goal_handle.request.upload_path, 
+                initial_localization_fiducial=goal_handle.request.initial_localization_fiducial, 
+                initial_localization_waypoint=goal_handle.request.initial_localization_waypoint)):
+            resp = self.spot_wrapper.spot_graph_nav.navigate_to_existing_waypoint(goal_handle.request.navigate_to)
+            self.run_navigate_to = False
+            feedback_thread.join()
+        else: 
+            resp[0] = False
+            resp[1] = "Unable to initialize localization"
         result = NavigateTo.Result()
         result.success = resp[0]
         result.message = resp[1]
